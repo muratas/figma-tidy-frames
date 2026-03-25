@@ -1,47 +1,78 @@
-# figma-tidy-frames
+# Frame Tidy
 
-FigmaのFrameを40px間隔で並べるプラグイン
+選択したフレーム・セクション内の子要素を自動整列するFigmaプラグイン。
+オートレイアウト未使用のフレームに対して、gap・paddingを一括で適用する。
 
 ---
 
-Below are the steps to get your plugin running. You can also find instructions at:
+## 動作概要
 
-  https://www.figma.com/plugin-docs/plugin-quickstart-guide/
+### 対象ノード
 
-This plugin template uses Typescript and NPM, two standard tools in creating JavaScript applications.
+選択したフレームまたはセクションを起点に、以下のノードを対象として処理する。
 
-First, download Node.js which comes with NPM. This will allow you to install TypeScript and other
-libraries. You can find the download link here:
+- `FRAME`
+- `SECTION`
+- `WIDGET`
 
-  https://nodejs.org/en/download/
+上記以外のノード（テキスト、図形など）は無視される。
 
-Next, install TypeScript using the command:
+### 適用される値
 
-  npm install -g typescript
+| 項目 | 値 |
+|---|---|
+| 兄弟間の gap | 40px |
+| padding（上下左右） | 100px |
 
-Finally, in the directory of your plugin, get the latest type definitions for the plugin API by running:
+### 処理の流れ
 
-  npm install --save-dev @figma/plugin-typings
+1. 選択したノードを起点に子要素を走査する
+2. 子に `SECTION` があれば再帰的に処理する（内側から外側へ）
+3. `FRAME` と `WIDGET` は位置のみ移動し、中には入らない
+4. 子要素の座標の分散を比較して縦横方向を自動判定する
+5. 判定した方向に沿って gap 40px で子を並べ直す
+6. 親ノードをコンテンツサイズ + padding 100px にリサイズする
 
-If you are familiar with JavaScript, TypeScript will look very familiar. In fact, valid JavaScript code
-is already valid Typescript code.
+### 縦横の自動判定ロジック
 
-TypeScript adds type annotations to variables. This allows code editors such as Visual Studio Code
-to provide information about the Figma API while you are writing code, as well as help catch bugs
-you previously didn't notice.
+子要素の x 座標の分散と y 座標の分散を比較する。
 
-For more information, visit https://www.typescriptlang.org/
+- x 分散 > y 分散 → **横並び**
+- x 分散 ≤ y 分散 → **縦並び**
 
-Using TypeScript requires a compiler to convert TypeScript (code.ts) into JavaScript (code.js)
-for the browser to run.
+### padding の扱い
 
-We recommend writing TypeScript code using Visual Studio code:
+| ノード種別 | padding の適用方法 |
+|---|---|
+| `FRAME` | `paddingTop/Bottom/Left/Right` プロパティに直接セット |
+| `SECTION` | Figma API に padding プロパティが存在しないため、子要素の座標を 100px オフセットすることで擬似的に再現 |
 
-1. Download Visual Studio Code if you haven't already: https://code.visualstudio.com/.
-2. Open this directory in Visual Studio Code.
-3. Compile TypeScript to JavaScript: Run the "Terminal > Run Build Task..." menu item,
-    then select "npm: watch". You will have to do this again every time
-    you reopen Visual Studio Code.
+---
 
-That's it! Visual Studio Code will regenerate the JavaScript file every time you save.
+## 使い方
 
+1. 整列したいフレームまたはセクションを1つ以上選択する
+2. プラグインを実行する
+3. 完了通知が表示される（例：`✅ スペーシングを適用しました（2件）`）
+
+複数選択した場合、FRAME・SECTION 以外のノードは無視してそれぞれに処理を適用する。
+
+---
+
+## 制約・注意事項
+
+- オートレイアウトが設定されたフレームへの動作は未検証
+- `FRAME` の内部要素（テキスト、図形など）は一切変更されない
+- `SECTION` のリサイズには `resizeWithoutConstraints()` を使用している（`resize()` は SECTION 非対応のため）
+- 処理はアンドゥ（Cmd+Z）で戻せる
+
+---
+
+## ファイル構成
+
+```
+/
+├── manifest.json
+├── code.js
+└── README.md
+```
