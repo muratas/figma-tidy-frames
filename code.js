@@ -1,5 +1,5 @@
 // === UI を表示 ===
-figma.showUI(__html__, { width: 240, height: 148 });
+figma.showUI(__html__, { width: 240, height: 280 });
 
 // === UIからのメッセージを受信 ===
 figma.ui.onmessage = (msg) => {
