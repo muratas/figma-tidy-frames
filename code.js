@@ -1,47 +1,54 @@
-// === 定数 ===
-const GAP = 40;
-const PADDING = 100;
+// === UI を表示 ===
+figma.showUI(__html__, { width: 240, height: 148 });
 
-// === メイン処理 ===
-const selection = figma.currentPage.selection;
+// === UIからのメッセージを受信 ===
+figma.ui.onmessage = (msg) => {
+  if (msg.type !== 'apply') return;
 
-if (selection.length === 0) {
-  figma.notify("⚠️ フレームを選択してください");
-  figma.closePlugin();
-} else {
+  const gap = msg.gap;
+  const padding = msg.padding;
+
+  const selection = figma.currentPage.selection;
+
+  if (selection.length === 0) {
+    figma.notify("⚠️ フレームを選択してください");
+    return;
+  }
+
   const targets = selection.filter(
     (n) => n.type === "FRAME" || n.type === "SECTION"
   );
+
   if (targets.length === 0) {
     figma.notify("⚠️ フレームまたはセクションを選択してください");
-    figma.closePlugin();
-  } else {
-    for (const root of targets) {
-      processNode(root);
-    }
-    figma.notify("✅ スペーシングを適用しました（" + targets.length + "件）");
-    figma.closePlugin();
+    return;
   }
-}
+
+  for (const root of targets) {
+    processNode(root, gap, padding);
+  }
+
+  figma.notify("✅ スペーシングを適用しました（" + targets.length + "件）");
+};
 
 // === ノードを再帰処理 ===
-function processNode(node) {
+function processNode(node, gap, padding) {
   const children = getLayoutChildren(node);
   if (children.length === 0) return;
 
   // SECTIONのみ再帰する。FRAMEは位置だけ動かすので中には入らない
   for (const child of children) {
     if (child.type === "SECTION") {
-      processNode(child);
+      processNode(child, gap, padding);
     }
   }
 
   // padding をセット（FRAMEはプロパティ、SECTIONは子座標オフセットで擬似再現）
-  setPadding(node, PADDING);
+  setPadding(node, padding);
 
   // 子の並び方向を判定して並べ直す
   const direction = detectDirection(children);
-  layoutChildren(node, children, direction, PADDING, GAP);
+  layoutChildren(node, children, direction, padding, gap);
 }
 
 // === レイアウト対象の子を取得（FRAME・SECTION・WIDGETが対象） ===
