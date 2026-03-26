@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: Inter, -apple-system, sans-serif;
+      margin: 0;
+      padding: 16px;
+      font-size: 11px;
+      color: #333;
+    }
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    input[type="number"] {
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 6px 8px;
+      border: 1px solid #e0e0e0;
+      border-radius: 2px;
+      font-size: 11px;
+      outline: none;
+    }
+    input[type="number"]:focus {
+      border-color: #18a0fb;
+    }
+    button {
+      width: 100%;
+      padding: 8px;
+      background: #18a0fb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    button:hover { background: #0d8de3; }
+    button:active { background: #0a7bc7; }
+  </style>
+</head>
+<body>
+  <label>Spacing (px)</label>
+  <input id="spacing" type="number" value="40" min="0" />
+  <label>Padding (px)</label>
+  <input id="padding" type="number" value="100" min="0" />
+  <button id="apply">Apply</button>
+  <script>
+    document.getElementById('apply').onclick = () => {
+      const gap = parseInt(document.getElementById('spacing').value, 10);
+      const padding = parseInt(document.getElementById('padding').value, 10);
+      parent.postMessage({ pluginMessage: { type: 'apply', gap, padding } }, '*');
+    };
+  </script>
+</body>
+</html>
